@@ -48,7 +48,7 @@ namespace TicTacToe.Infrastructure.Repositories
 
             var createdMove = await  _context.Moves.AddAsync(new Move { GameId=gameId, Column=col, Row=row, Player=player, Etag=foundGame.Result.Etag}, cancellationToken);
 
-           // foundGame.Result.Etag = _etagGenerator.GetEtag(createdMove.Entity);
+           
 
             await _context.SaveChangesAsync();
 
@@ -71,25 +71,11 @@ namespace TicTacToe.Infrastructure.Repositories
             return true;
         }
         
-        //public async Task<Game?> GetByIdAsync(Guid id, string expectedEtag ,CancellationToken cancellationToken)
-        //{
-           
-        //    var found = await _context.Games.FirstOrDefaultAsync(g => g.Id == id,cancellationToken);
-        //    if (cancellationToken.IsCancellationRequested) { return null;}
-
-        //    if (found != null && expectedEtag != null && found.Etag != expectedEtag)
-        //    {
-        //        throw new ConcurrencyException();
-        //    }
-
-        //    if (found != null) { return found; }
-        //    else { return null; }
-        //}
 
         public async Task<Game?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
         {
             var found = await _context.Games.Include(g => g.Moves).FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
-            if (cancellationToken.IsCancellationRequested) { return null; }
+            
           
             if (found != null) { return found; }
             else { return null; }
