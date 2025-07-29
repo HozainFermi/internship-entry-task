@@ -53,12 +53,12 @@ namespace TicTacToe.API.Controllers
         }
 
         [HttpPost("{id}/moves")]
-        public async Task<IActionResult> MakeMoveAsync(Guid gameId, [FromBody] MakeMoveDTO request, [FromHeader(Name = "If-Match")] string ifMatchHeader, CancellationToken cancellationToken)
+        public async Task<IActionResult> MakeMoveAsync(Guid id, [FromBody] MakeMoveDTO request, [FromHeader(Name = "If-Match")] string ifMatchHeader, CancellationToken cancellationToken)
         {
             
             try
             {
-                (MoveResultDTO? result, string etag) = await _gameService.MakeMoveAsync(gameId, request, ifMatchHeader, cancellationToken);
+                (MoveResultDTO? result, string etag) = await _gameService.MakeMoveAsync(id, request, ifMatchHeader, cancellationToken);
 
                 Response.Headers.ETag = etag;
                 return Ok((result,etag));

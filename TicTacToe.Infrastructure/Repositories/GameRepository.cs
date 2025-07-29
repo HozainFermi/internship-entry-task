@@ -88,7 +88,7 @@ namespace TicTacToe.Infrastructure.Repositories
 
         public async Task<Game?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
         {
-            var found = await _context.Games.FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
+            var found = await _context.Games.Include(g => g.Moves).FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
             if (cancellationToken.IsCancellationRequested) { return null; }
           
             if (found != null) { return found; }
