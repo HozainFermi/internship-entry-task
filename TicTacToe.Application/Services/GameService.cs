@@ -54,15 +54,18 @@ namespace TicTacToe.Application.Services
 
         
 
-        public async Task<(MoveResultDTO? result, string etag)> MakeMoveAsync(MakeMoveDTO dto, string expectedVersion, CancellationToken cancellationToken=default)
+        public async Task<(MoveResultDTO? result, string etag)> MakeMoveAsync(Guid gameId,MakeMoveDTO dto, string expectedVersion, CancellationToken cancellationToken=default)
         {
-            var game = await _gameRepository.GetByIdAsync(dto.GameId , cancellationToken);
+            var game = await _gameRepository.GetByIdAsync(gameId, cancellationToken);
             
             if (game == null)
             {
-                throw new GameNotFoundException(dto.GameId);
+                throw new GameNotFoundException(gameId);
             }
-            //try catch в контроллере вернуть Ok(Etag)
+            if(dto.Player!='X' && dto.Player != 'O')
+            {
+                throw new BadRequestException("Incorrect player symbol");
+            }            
             if (game.Etag != expectedVersion)
             {
                 throw new ConcurrencyException();
@@ -89,7 +92,7 @@ namespace TicTacToe.Application.Services
             }
             
             //ход игрока
-            Move? move = await _gameRepository.CreateMoveAsync(dto.GameId,dto.Row, dto.Column,dto.Player ,cancellationToken);
+            Move? move = await _gameRepository.CreateMoveAsync(gameId, dto.Row, dto.Column,dto.Player ,cancellationToken);
             var generatedEtag = _etagGenerator.GetEtag(move);
             game.MoveCount += 1;
             GameState check = CheckWin(game,move);

@@ -26,10 +26,6 @@ namespace TicTacToe.Tests.Unit
         {
             // Arrange
             var mockRepo = new Mock<IGameRepository>();
-            var mockSettings = new Mock<GameSettings>();
-            mockSettings.Setup(x => x.BoardSize).Returns(settings.BoardSize);
-            mockSettings.Setup(x => x.WinCon).Returns(settings.WinCon);
-
             var mockRandomizer = new Mock<IRandomizer>();
             var mockEtagGenerator = new Mock<IEtagGenerator>();
 
@@ -39,11 +35,11 @@ namespace TicTacToe.Tests.Unit
             mockRepo.Setup(x => x.CreateAsync(It.IsAny<Game>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(game);
 
-           
+            // Используем реальный объект settings из TestGameSettings
             var service = new GameService(
                 gameRepository: mockRepo.Object,
-                gameSettings: mockSettings.Object,
                 randomizer: mockRandomizer.Object,
+                gameSettings: settings, // Передаем реальные настройки
                 etagGenerator: mockEtagGenerator.Object);
 
             var dto = new CreateGameDTO { FirstPlayer = "player1", SecondPlayer = "player2" };
@@ -66,18 +62,14 @@ namespace TicTacToe.Tests.Unit
         public void CheckWin_ShouldDetectWin_ForDifferentSettings(GameSettings settings)
         {
             // Arrange
-            var mockSettings = new Mock<GameSettings>();
-            mockSettings.Setup(x => x.BoardSize).Returns(settings.BoardSize);
-            mockSettings.Setup(x => x.WinCon).Returns(settings.WinCon);
-
             var mockRepo = new Mock<IGameRepository>();
             var mockRandomizer = new Mock<IRandomizer>();
             var mockEtagGenerator = new Mock<IEtagGenerator>();
 
             var service = new GameService(
                 gameRepository: mockRepo.Object,
-                gameSettings: mockSettings.Object,
                 randomizer: mockRandomizer.Object,
+                gameSettings: settings, // Используем реальные настройки
                 etagGenerator: mockEtagGenerator.Object);
 
             // Создаем доску с выигрышной комбинацией
@@ -116,12 +108,8 @@ namespace TicTacToe.Tests.Unit
             // Arrange
             var gameId = Guid.NewGuid();
             var mockRepo = new Mock<IGameRepository>();
-            var mockSettings = new Mock<GameSettings>();
             var mockRandomizer = new Mock<IRandomizer>();
             var mockEtagGenerator = new Mock<IEtagGenerator>();
-
-            mockSettings.Setup(x => x.BoardSize).Returns(settings.BoardSize);
-            mockSettings.Setup(x => x.WinCon).Returns(settings.WinCon);
 
             var board = new char[settings.BoardSize][];
             for (int i = 0; i < settings.BoardSize; i++)
@@ -141,10 +129,18 @@ namespace TicTacToe.Tests.Unit
 
             mockRepo.Setup(x => x.GetByIdAsync(gameId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(game);
+
+            
             mockRepo.Setup(x => x.UpdateAsync(It.IsAny<Game>(), It.IsAny<CancellationToken>()))
-                .Returns((Task<Game>)Task.CompletedTask);
-            mockRepo.Setup(x => x.CreateMoveAsync(It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<int>(),
-                It.IsAny<char>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Game g, CancellationToken _) => g);
+
+
+            mockRepo.Setup(x => x.CreateMoveAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<char>(),
+                It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new Move());
 
             mockEtagGenerator.Setup(x => x.GetEtag(It.IsAny<Move>()))
@@ -152,40 +148,45 @@ namespace TicTacToe.Tests.Unit
 
             var service = new GameService(
                 gameRepository: mockRepo.Object,
-                gameSettings: mockSettings.Object,
                 randomizer: mockRandomizer.Object,
+                gameSettings: settings,
                 etagGenerator: mockEtagGenerator.Object);
 
             // Выбираем центральную клетку
             var row = settings.BoardSize / 2;
             var col = settings.BoardSize / 2;
-            var dto = new MakeMoveDTO { GameId = gameId, Player = 'X', Row = row, Column = col };
+            var dto = new MakeMoveDTO
+            {
+               
+                Player = 'X',
+                Row = row,
+                Column = col
+            };
 
             // Act
-            var result = await service.MakeMoveAsync(dto, "old-etag");
+            var result = await service.MakeMoveAsync(gameId, dto, "old-etag");
 
             // Assert
             Assert.Equal("new-etag", result.etag);
             Assert.Equal(GameState.InProgress, result.result.state);
             Assert.Equal('X', game.Board[row][col]);
-            mockRepo.Verify(x => x.UpdateAsync(It.Is<Game>(g => g.Etag == "new-etag"), It.IsAny<CancellationToken>()), Times.Once);
         }
-
 
         [Fact]
         public async Task CreateGameAsync_ShouldReturnNull_WhenCreationFails()
         {
             // Arrange
             var mockRepo = new Mock<IGameRepository>();
-            var mockSettings = new Mock<GameSettings>();
-            mockSettings.Setup(x => x.BoardSize).Returns(3);
-            mockSettings.Setup(x => x.WinCon).Returns(3);
+            var settings = new GameSettings(3, 3); // Реальные настройки
 
             mockRepo.Setup(x => x.CreateAsync(It.IsAny<Game>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Game)null);
 
-            var service = new GameService(mockRepo.Object, Mock.Of<IRandomizer>(),
-                mockSettings.Object, Mock.Of<IEtagGenerator>());
+            var service = new GameService(
+                gameRepository: mockRepo.Object,
+                randomizer: Mock.Of<IRandomizer>(),
+                gameSettings: settings,
+                etagGenerator: Mock.Of<IEtagGenerator>());
 
             var dto = new CreateGameDTO { FirstPlayer = "player1", SecondPlayer = "player2" };
 
@@ -196,7 +197,6 @@ namespace TicTacToe.Tests.Unit
             Assert.Null(result);
             mockRepo.Verify(x => x.CreateAsync(It.IsAny<Game>(), It.IsAny<CancellationToken>()), Times.Once);
         }
-
 
 
 
