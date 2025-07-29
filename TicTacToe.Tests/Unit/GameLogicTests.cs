@@ -157,14 +157,14 @@ namespace TicTacToe.Tests.Unit
             var col = settings.BoardSize / 2;
             var dto = new MakeMoveDTO
             {
-                GameId = gameId,
+               
                 Player = 'X',
                 Row = row,
                 Column = col
             };
 
             // Act
-            var result = await service.MakeMoveAsync(dto, "old-etag");
+            var result = await service.MakeMoveAsync(gameId, dto, "old-etag");
 
             // Assert
             Assert.Equal("new-etag", result.etag);

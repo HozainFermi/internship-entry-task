@@ -8,7 +8,7 @@ namespace TicTacToe.Core.DTOs
 {
     public class MakeMoveDTO
     {
-        public Guid GameId { get; set; }
+       // public Guid GameId { get; set; }
         public required char Player { get; set; } 
         public int Row { get; set; }
         public int Column { get; set; }

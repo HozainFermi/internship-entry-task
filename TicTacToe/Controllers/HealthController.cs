@@ -7,7 +7,7 @@ namespace TicTacToe.API.Controllers
     public class HealthController: ControllerBase
     {
         [HttpGet]
-        [Route("health")]
+        [Route("")]
         public IActionResult Get() 
         { 
             return Ok(); 
