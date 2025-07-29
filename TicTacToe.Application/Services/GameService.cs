@@ -62,7 +62,10 @@ namespace TicTacToe.Application.Services
             {
                 throw new GameNotFoundException(dto.GameId);
             }
-            //try catch в контроллере вернуть Ok(Etag)
+            if(dto.Player!='X' && dto.Player != 'O')
+            {
+                throw new BadRequestException("Incorrect player symbol");
+            }            
             if (game.Etag != expectedVersion)
             {
                 throw new ConcurrencyException();

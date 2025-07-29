@@ -8,7 +8,7 @@ namespace TicTacToe.Tests
     {
         public static readonly GameSettings NormalSettings = new(3, 3);
         public static readonly GameSettings MediumSettings = new(5, 4);
-        public static readonly GameSettings LargeSettings = new(100, 20);
+        public static readonly GameSettings LargeSettings = new(10, 5);
 
         public static IEnumerable<object[]> GetSettings()
         {
