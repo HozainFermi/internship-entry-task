@@ -32,13 +32,14 @@ namespace TicTacToe.Application.Services
             _etagGenerator = etagGenerator;
         }
 
-        public async Task<GameDTO> CreateGameAsync(CreateGameDTO dto, CancellationToken cancellationToken = default)
+        public async Task<GameDTO?> CreateGameAsync(CreateGameDTO dto, CancellationToken cancellationToken = default)
         {
             var game = new Game(_gameSettings.BoardSize, dto.FirstPlayer, dto.SecondPlayer, _gameSettings.WinCon);
            
-           await _gameRepository.CreateAsync(game, cancellationToken);
+          var created = await _gameRepository.CreateAsync(game, cancellationToken);
+            if (created == null) { return null; }
 
-            return game.MapToDto();
+            return created.MapToDto();
         }
 
         public async Task<GameDTO> GetGameAsync(Guid id, CancellationToken cancellationToken = default)
@@ -51,9 +52,7 @@ namespace TicTacToe.Application.Services
             return game.MapToDto();
         }
 
-        //TODO:
-        //сделать норм обработку/проверку ходов на выйгрыш после каждого хода с использованием массива направлений
-        //контроллеры с IfMatch заголовком в который помещался бы Etag при создании новой игры, а при ходе игрока сверялся бы  
+        
 
         public async Task<(MoveResultDTO? result, string etag)> MakeMoveAsync(MakeMoveDTO dto, string expectedVersion, CancellationToken cancellationToken=default)
         {
@@ -88,7 +87,7 @@ namespace TicTacToe.Application.Services
             {
                 game.Board[dto.Row][dto.Column] = game.CurrentPlayer;
             }
-
+            
             //ход игрока
             Move? move = await _gameRepository.CreateMoveAsync(dto.GameId,dto.Row, dto.Column,dto.Player ,cancellationToken);
             var generatedEtag = _etagGenerator.GetEtag(move);
@@ -110,7 +109,7 @@ namespace TicTacToe.Application.Services
 
         
 
-        private GameState CheckWin(Game game, Move move)
+        public GameState CheckWin(Game game, Move move)
         {
             if (game?.Board == null || move == null)
                 return GameState.InProgress;
@@ -166,7 +165,7 @@ namespace TicTacToe.Application.Services
 
 
 
-        private bool IsBoardFull(Game game)
+        public bool IsBoardFull(Game game)
         {
             if (game.MoveCount == _gameSettings.BoardSize * _gameSettings.BoardSize) { return true; }
             return false;

@@ -23,6 +23,12 @@ namespace TicTacToe.Core.Entities
         public string Etag { get; set; } = "no-etag";
         public ICollection<Move> Moves = new List<Move>();
 
+        public Game()
+        {
+            
+        }
+
+
         public Game(int boardSize, string firstplayer, string secondplayer, int wincon )
         {
             BoardSize = boardSize;

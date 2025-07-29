@@ -48,7 +48,7 @@ namespace TicTacToe.Infrastructure.Repositories
 
             var createdMove = await  _context.Moves.AddAsync(new Move { GameId=gameId, Column=col, Row=row, Player=player, Etag=foundGame.Result.Etag}, cancellationToken);
 
-            foundGame.Result.Etag = _etagGenerator.GetEtag(createdMove.Entity);
+           // foundGame.Result.Etag = _etagGenerator.GetEtag(createdMove.Entity);
 
             await _context.SaveChangesAsync();
 
@@ -109,6 +109,7 @@ namespace TicTacToe.Infrastructure.Repositories
                 }
 
                 _context.Entry(existingGame).CurrentValues.SetValues(game);
+                _context.Entry(existingGame).Property(g => g.Board).IsModified = true;
                 await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
                 return existingGame; 

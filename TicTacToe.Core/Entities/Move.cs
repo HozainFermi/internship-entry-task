@@ -14,7 +14,7 @@ namespace TicTacToe.Core.Entities
         public int Row { get; set; }
         public int Column { get; set; }
         public Guid GameId { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public char Player { get; set; }
         public string Etag { get; set; } = "no-etag";
 

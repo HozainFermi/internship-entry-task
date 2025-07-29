@@ -85,30 +85,21 @@ namespace TicTacToe.Infrastructure.DbContexts
             });
         }
 
-        //protected override void OnModelCreating(ModelBuilder modelBuilder)
-        //{
-        //    modelBuilder.Entity<Game>(entity =>
-        //    {
-        //        entity.HasKey(g => g.Id);
-        //        entity.Property(g => g.Board)
-        //            .HasConversion(
-        //                v => string.Join(";", v.Select(row => new string(row))),
-        //                v => v.Split(';', StringSplitOptions.RemoveEmptyEntries)
-        //                    .Select(row => row.ToCharArray())
-        //                    .ToArray());
-        //        entity.Property(g => g.CurrentPlayer).IsRequired();
-        //        entity.Property(g => g.State).IsRequired();
-        //        entity.Property(g => g.MoveCount).IsRequired();
-        //        entity.Property(g => g.Etag).IsRequired().IsConcurrencyToken();
-        //    });
+        private static char[][] InitializeDefaultBoard(int size)
+        {
+            var board = new char[size][];
+            for (int i = 0; i < size; i++)
+            {
+                board[i] = new char[size];
+                Array.Fill(board[i], ' ');
+            }
+            return board;
+        }
 
-        //    modelBuilder.Entity<Move>(entity =>
-        //    {
-        //        entity.HasKey(m => m.Id);
-        //        entity.Property(m => m.Row);
-        //        entity.Property(m => m.Column);
-        //        entity.H
-        //    });
-        //}
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            WriteIndented = false,
+            PropertyNameCaseInsensitive = true
+        };
     }
 }

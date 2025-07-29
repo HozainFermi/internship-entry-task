@@ -4,6 +4,7 @@ using System.Data;
 using System.Threading.Tasks;
 using TicTacToe.Core.Configuration;
 using TicTacToe.Core.DTOs;
+using TicTacToe.Core.Exceptions;
 using TicTacToe.Core.Exceptions.Game;
 using TicTacToe.Core.Interfaces.Services;
 
@@ -25,8 +26,15 @@ namespace TicTacToe.API.Controllers
         {
 
             GameDTO game = await _gameService.CreateGameAsync(dto, cancellationToken);
-            
-            return CreatedAtAction(nameof(CreateGameAsync), game);
+
+            return Created(
+        uri: $"/api/games/{game.Id}",
+        value: new
+        {
+            status = StatusCodes.Status201Created,
+            title = "Game created",
+            game = game
+        });
         }
 
         [HttpGet("{id}")]
@@ -45,9 +53,9 @@ namespace TicTacToe.API.Controllers
         }
 
         [HttpPost("{id}/moves")]
-        public async Task<IActionResult> MakeMoveAsync(Guid id, [FromBody] MakeMoveDTO request, [FromHeader(Name = "If-Match")] string ifMatchHeader, CancellationToken cancellationToken)
+        public async Task<IActionResult> MakeMoveAsync( [FromBody] MakeMoveDTO request, [FromHeader(Name = "If-Match")] string ifMatchHeader, CancellationToken cancellationToken)
         {
-
+            
             try
             {
                 (MoveResultDTO? result, string etag) = await _gameService.MakeMoveAsync(request, ifMatchHeader, cancellationToken);
@@ -57,7 +65,19 @@ namespace TicTacToe.API.Controllers
             }
             catch (ConcurrencyException)
             {
-                return StatusCode(412, new ProblemDetails { Title = "ETag mismatch or concurrency conflict" });
+                return Ok(ifMatchHeader);
+            }
+            catch (GameNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (InvalidMoveException)
+            {
+                return BadRequest();
+            }
+            catch (BadRequestException)
+            {
+                return BadRequest();
             }
             
         }
